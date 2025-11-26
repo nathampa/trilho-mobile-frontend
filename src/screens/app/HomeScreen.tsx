@@ -10,12 +10,9 @@ import { useHabitStore, Habit } from '../../store/useHabitStore';
 import { colors, borderRadius, spacing } from '../../config/theme';
 import { CreateHabitModal } from '../../components/CreateHabitModal';
 import { getIconComponent, getColorValue } from '../../utils/mappers';
-import { isSameDay, startOfDay } from 'date-fns'; // CORREÇÃO: Adicionando startOfDay
-// ----------------------------------------------------------------------
-// CORREÇÃO: Importações de Componentes
+import { isSameDay } from 'date-fns';
 import { StatsHeader } from '../../components/StatsHeader'; 
 import { MotivationalCard } from '../../components/MotivationalCard';
-// ----------------------------------------------------------------------
 
 export const HomeScreen = () => {
   const insets = useSafeAreaInsets();
@@ -45,11 +42,11 @@ export const HomeScreen = () => {
   };
 
   const isCompletedToday = (dates: string[]): boolean => {
-    const todayStart = startOfDay(new Date()); 
+    const today = new Date();
     
     return dates.some(dateString => {
-      const completionDateStart = startOfDay(new Date(dateString));
-      return isSameDay(completionDateStart, todayStart);
+      const completionDate = new Date(dateString);
+      return isSameDay(completionDate, today);
     });
   };
   
@@ -103,7 +100,6 @@ export const HomeScreen = () => {
     );
   };
   
-  // Este componente será o cabeçalho da lista, rolando junto com os itens
   const ListHeader = () => (
     <View style={styles.listHeaderContainer}>
       <StatsHeader />
@@ -118,7 +114,6 @@ export const HomeScreen = () => {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       
-      {/* Top Bar Fixa - Apenas saudação e botões */}
       <View style={[styles.topBar, { paddingTop: insets.top + spacing.md }]}> 
         <View>
           <Text style={styles.greeting}>Olá, {user?.nome.split(' ')[0]}</Text>
@@ -142,7 +137,6 @@ export const HomeScreen = () => {
         </View>
       </View>
 
-      {/* Lista Principal que contém StatsHeader + Motivational + Hábitos */}
       <FlatList
         data={habits}
         keyExtractor={item => item.id}
@@ -211,7 +205,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  // Ajustes da Lista
   listContent: {
     paddingBottom: spacing.xl,
   },
@@ -229,13 +222,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     marginTop: spacing.md,
   },
-  // Card de Hábito
   card: {
     backgroundColor: '#FFF',
     borderRadius: borderRadius.lg,
     padding: 16,
     marginBottom: 12,
-    marginHorizontal: spacing.lg, // Garante margem lateral
+    marginHorizontal: spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     shadowColor: '#000',
