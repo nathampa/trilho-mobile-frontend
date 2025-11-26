@@ -35,30 +35,18 @@ export const HomeScreen = () => {
 
   const handleToggleHabit = async (habitId: string) => {
     try {
-      console.log('🔄 Toggling habit:', habitId);
       await toggleHabit(habitId);
-      console.log('✅ Habit toggled successfully');
     } catch (error: any) {
-      console.error('❌ Error toggling habit:', error);
+      console.error('Erro ao alternar hábito:', error);
     }
   };
 
   const isCompletedToday = (dates: string[]): boolean => {
     const today = new Date();
-    
-    // DEBUG: Log das datas
-    console.log('📅 Checking completion for today:', today.toISOString());
-    console.log('📋 Completion dates:', dates);
-    
-    const result = dates.some(dateString => {
+    return dates.some(dateString => {
       const completionDate = new Date(dateString);
-      const same = isSameDay(completionDate, today);
-      console.log(`  - ${dateString} -> ${completionDate.toISOString()} -> isSameDay: ${same}`);
-      return same;
+      return isSameDay(completionDate, today);
     });
-    
-    console.log('✔️ Final result:', result);
-    return result;
   };
   
   const completionProgress = useMemo(() => {
@@ -66,7 +54,6 @@ export const HomeScreen = () => {
     if (totalHabits === 0) return 0;
     
     const completedToday = habits.filter(h => isCompletedToday(h.datasDeConclusao)).length;
-
     return Math.round((completedToday / totalHabits) * 100);
   }, [habits]);
 
@@ -74,8 +61,6 @@ export const HomeScreen = () => {
     const Icon = getIconComponent(item.icone);
     const color = getColorValue(item.cor);
     const completed = isCompletedToday(item.datasDeConclusao);
-
-    console.log(`🎯 Rendering habit: ${item.nome}, completed: ${completed}`);
 
     return (
       <View style={[styles.card, { borderLeftColor: color, borderLeftWidth: 4 }]}>
