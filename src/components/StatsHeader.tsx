@@ -3,15 +3,16 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Flame, Check, Trophy } from 'lucide-react-native';
 import { useHabitStore } from '../store/useHabitStore';
 import { colors, borderRadius, spacing } from '../config/theme';
+import { isSameDay } from 'date-fns';
 
 export const StatsHeader = () => {
   const { stats, habits } = useHabitStore();
   
   // Calcular Progresso do Dia (X/Y concluídos)
-  const today = new Date().setHours(0, 0, 0, 0);
+  const today = new Date();
   const totalHabits = habits.length;
   const completedToday = habits.filter(h => 
-    h.datasDeConclusao.some(dateStr => new Date(dateStr).setHours(0, 0, 0, 0) === today)
+    h.datasDeConclusao.some(dateStr => isSameDay(new Date(dateStr), today))
   ).length;
 
   return (
@@ -53,7 +54,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
-    aspectRatio: 1, // Torna o card quadrado
+    aspectRatio: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -61,13 +62,13 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   streakCard: {
-    backgroundColor: '#F97316', // Laranja para Streak
+    backgroundColor: '#F97316',
   },
   progressCard: {
-    backgroundColor: colors.primary, // Verde Esmeralda
+    backgroundColor: colors.primary,
   },
   recordCard: {
-    backgroundColor: colors.habit.blue, // Azul para Recorde
+    backgroundColor: colors.habit.blue,
   },
   icon: {
     opacity: 0.8,

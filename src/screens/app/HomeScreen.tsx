@@ -35,19 +35,30 @@ export const HomeScreen = () => {
 
   const handleToggleHabit = async (habitId: string) => {
     try {
+      console.log('🔄 Toggling habit:', habitId);
       await toggleHabit(habitId);
+      console.log('✅ Habit toggled successfully');
     } catch (error: any) {
-      console.error(error);
+      console.error('❌ Error toggling habit:', error);
     }
   };
 
   const isCompletedToday = (dates: string[]): boolean => {
     const today = new Date();
     
-    return dates.some(dateString => {
+    // DEBUG: Log das datas
+    console.log('📅 Checking completion for today:', today.toISOString());
+    console.log('📋 Completion dates:', dates);
+    
+    const result = dates.some(dateString => {
       const completionDate = new Date(dateString);
-      return isSameDay(completionDate, today);
+      const same = isSameDay(completionDate, today);
+      console.log(`  - ${dateString} -> ${completionDate.toISOString()} -> isSameDay: ${same}`);
+      return same;
     });
+    
+    console.log('✔️ Final result:', result);
+    return result;
   };
   
   const completionProgress = useMemo(() => {
@@ -63,6 +74,8 @@ export const HomeScreen = () => {
     const Icon = getIconComponent(item.icone);
     const color = getColorValue(item.cor);
     const completed = isCompletedToday(item.datasDeConclusao);
+
+    console.log(`🎯 Rendering habit: ${item.nome}, completed: ${completed}`);
 
     return (
       <View style={[styles.card, { borderLeftColor: color, borderLeftWidth: 4 }]}>

@@ -6,7 +6,7 @@ import { useHabitStore } from '../../store/useHabitStore';
 import { getIconComponent, getColorValue } from '../../utils/mappers';
 import { isSameDay, subDays, format } from 'date-fns';
 
-const screenWidth = Dimensions.get('window').width; // CORREÇÃO: Definição de screenWidth aqui
+const screenWidth = Dimensions.get('window').width;
 
 // Componente para a barra de progresso individual
 const HabitProgressCard = ({ habit }: any) => {
@@ -20,7 +20,7 @@ const HabitProgressCard = ({ habit }: any) => {
   let completedCount = 0;
   const history = last7Days.map(day => {
     const isCompleted = habit.datasDeConclusao.some((dateStr: string) => 
-      new Date(dateStr).setHours(0, 0, 0, 0) === day.setHours(0, 0, 0, 0)
+      isSameDay(new Date(dateStr), day)
     );
     if (isCompleted) completedCount++;
     return { day, isCompleted };
