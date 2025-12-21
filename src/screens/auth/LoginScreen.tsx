@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { colors, borderRadius } from '../../config/theme'; // Importar borderRadius também
+import { getColors, borderRadius } from '../../config/theme';
 import { useAuthStore } from '../../store/useAuthStore';
 import api from '../../services/api';
-// Componentes customizados
 import { MyInput } from '../../components/MyInput';
 import { MyButton } from '../../components/MyButton';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export const LoginScreen = () => {
   const navigation = useNavigation<any>();
   const { signIn } = useAuthStore();
+  const { theme } = useTheme();
+  const colors = getColors(theme === 'dark');
   
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -37,9 +39,16 @@ export const LoginScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Trilho</Text>
-      <Text style={styles.subtitle}>Entre para continuar sua jornada</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar 
+        barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} 
+        backgroundColor={colors.background} 
+      />
+      
+      <Text style={[styles.title, { color: colors.primary }]}>Trilho</Text>
+      <Text style={[styles.subtitle, { color: colors.textLight }]}>
+        Entre para continuar sua jornada
+      </Text>
 
       <View style={styles.form}>
         <MyInput 
@@ -57,7 +66,7 @@ export const LoginScreen = () => {
           secureTextEntry
           value={senha}
           onChangeText={setSenha}
-          style={{ marginBottom: 0 }} // Remove a margem extra do MyInput
+          style={{ marginBottom: 0 }}
         />
 
         <MyButton
@@ -71,7 +80,9 @@ export const LoginScreen = () => {
           style={styles.linkButton} 
           onPress={() => navigation.navigate('Register')}
         >
-          <Text style={styles.linkText}>Não tem conta? Cadastre-se</Text>
+          <Text style={[styles.linkText, { color: colors.textLight }]}>
+            Não tem conta? Cadastre-se
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -81,20 +92,17 @@ export const LoginScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
     justifyContent: 'center',
     padding: 24,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: colors.primary,
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: colors.textLight,
     textAlign: 'center',
     marginBottom: 48,
   },
@@ -103,7 +111,7 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 24,
-    shadowColor: colors.primary,
+    shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -114,7 +122,6 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   linkText: {
-    color: colors.textLight,
     fontSize: 14,
   },
 });

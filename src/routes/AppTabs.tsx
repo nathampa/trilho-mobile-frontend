@@ -1,16 +1,19 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { ListTodo, TrendingUp, Calendar as CalendarIcon } from 'lucide-react-native';
+import { ListTodo, TrendingUp, Calendar as CalendarIcon, Settings } from 'lucide-react-native';
 import { HomeScreen } from '../screens/app/HomeScreen';
-import { colors } from '../config/theme';
-
-// Importações explícitas e corretas
 import { ProgressScreen } from '../screens/app/ProgressScreen';
 import { CalendarScreen } from '../screens/app/CalendarScreen';
+import { SettingsScreen } from '../screens/app/SettingsScreen';
+import { useTheme } from '../contexts/ThemeContext';
+import { getColors } from '../config/theme';
 
 const Tab = createBottomTabNavigator();
 
 export const AppTabs = () => {
+  const { theme } = useTheme();
+  const colors = getColors(theme === 'dark');
+
   return (
     <Tab.Navigator
       initialRouteName="Habits"
@@ -25,8 +28,8 @@ export const AppTabs = () => {
           paddingBottom: 5,
         },
         tabBarLabelStyle: {
-            fontSize: 12,
-            fontWeight: '600',
+          fontSize: 12,
+          fontWeight: '600',
         }
       }}
     >
@@ -52,6 +55,14 @@ export const AppTabs = () => {
         options={{
           title: 'Calendário',
           tabBarIcon: ({ color }) => <CalendarIcon color={color} size={24} />,
+        }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          title: 'Config',
+          tabBarIcon: ({ color }) => <Settings color={color} size={24} />,
         }}
       />
     </Tab.Navigator>

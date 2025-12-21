@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { colors } from '../../config/theme';
+import { getColors } from '../../config/theme';
 import { useAuthStore } from '../../store/useAuthStore';
 import api from '../../services/api';
-// Componentes customizados
 import { MyInput } from '../../components/MyInput';
 import { MyButton } from '../../components/MyButton';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export const RegisterScreen = () => {
   const navigation = useNavigation();
   const { signIn } = useAuthStore();
+  const { theme } = useTheme();
+  const colors = getColors(theme === 'dark');
   
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
@@ -38,9 +40,16 @@ export const RegisterScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Criar Conta</Text>
-      <Text style={styles.subtitle}>Comece seus novos hábitos hoje</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar 
+        barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} 
+        backgroundColor={colors.background} 
+      />
+      
+      <Text style={[styles.title, { color: colors.text }]}>Criar Conta</Text>
+      <Text style={[styles.subtitle, { color: colors.textLight }]}>
+        Comece seus novos hábitos hoje
+      </Text>
 
       <View style={styles.form}>
         <MyInput 
@@ -72,11 +81,16 @@ export const RegisterScreen = () => {
           title="Cadastrar" 
           onPress={handleRegister} 
           loading={loading}
-          style={styles.button}
+          style={[styles.button, { backgroundColor: colors.secondary }]}
         />
 
-        <TouchableOpacity style={styles.linkButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.linkText}>Já tem conta? Faça login</Text>
+        <TouchableOpacity 
+          style={styles.linkButton} 
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={[styles.linkText, { color: colors.textLight }]}>
+            Já tem conta? Faça login
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -84,11 +98,30 @@ export const RegisterScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, justifyContent: 'center', padding: 24 },
-  title: { fontSize: 28, fontWeight: 'bold', color: colors.text, textAlign: 'center', marginBottom: 8 },
-  subtitle: { fontSize: 16, color: colors.textLight, textAlign: 'center', marginBottom: 40 },
+  container: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    padding: 24 
+  },
+  title: { 
+    fontSize: 28, 
+    fontWeight: 'bold', 
+    textAlign: 'center', 
+    marginBottom: 8 
+  },
+  subtitle: { 
+    fontSize: 16, 
+    textAlign: 'center', 
+    marginBottom: 40 
+  },
   form: { gap: 16 },
-  button: { marginTop: 24, backgroundColor: colors.secondary, elevation: 2 },
-  linkButton: { alignItems: 'center', padding: 12 },
-  linkText: { color: colors.textLight },
+  button: { 
+    marginTop: 24, 
+    elevation: 2 
+  },
+  linkButton: { 
+    alignItems: 'center', 
+    padding: 12 
+  },
+  linkText: { fontSize: 14 },
 });

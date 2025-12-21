@@ -3,11 +3,12 @@ import {
   Modal, View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform 
 } from 'react-native';
 import { X } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context'; // Importação importante
-import { colors, borderRadius, spacing } from '../config/theme'; 
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { getColors, borderRadius, spacing } from '../config/theme'; 
 import { getIconComponent, getColorValue } from '../utils/mappers';
 import { MyInput } from './MyInput';
 import { MyButton } from './MyButton';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface Props {
   visible: boolean;
@@ -19,6 +20,9 @@ const AVAILABLE_COLORS = ['BLUE', 'GREEN', 'RED', 'YELLOW', 'PURPLE', 'PINK'];
 const AVAILABLE_ICONS = ['BOOK', 'WEIGHTS', 'MEDITATION', 'WATER', 'CODE', 'RUNNING', 'MOON', 'SAVE', 'CAR', 'BIKE'];
 
 export const CreateHabitModal = ({ visible, onClose, onSubmit }: Props) => {
+  const { theme } = useTheme();
+  const colors = getColors(theme === 'dark');
+  
   const [nome, setNome] = useState('');
   const [cor, setCor] = useState('BLUE');
   const [icone, setIcone] = useState('BOOK');
@@ -48,25 +52,26 @@ export const CreateHabitModal = ({ visible, onClose, onSubmit }: Props) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.overlay}
       >
-        {/* Área para fechar ao clicar fora (opcional) */}
         <TouchableOpacity 
           style={styles.dismissArea} 
           activeOpacity={1} 
           onPress={onClose} 
         />
 
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.white }]}>
           {/* Cabeçalho Fixo */}
           <View style={styles.header}>
-            <Text style={styles.title}>Novo Hábito</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <Text style={[styles.title, { color: colors.text }]}>Novo Hábito</Text>
+            <TouchableOpacity 
+              onPress={onClose} 
+              style={[styles.closeButton, { backgroundColor: colors.background }]}
+            >
               <X color={colors.textLight} size={24} />
             </TouchableOpacity>
           </View>
 
           <ScrollView 
             showsVerticalScrollIndicator={false}
-            // O segredo está no paddingBottom alto aqui para o botão respirar
             contentContainerStyle={styles.scrollContent}
           >
             <MyInput 
@@ -76,7 +81,7 @@ export const CreateHabitModal = ({ visible, onClose, onSubmit }: Props) => {
               onChangeText={setNome}
             />
 
-            <Text style={styles.label}>Cor do Tema</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Cor do Tema</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow}>
               {AVAILABLE_COLORS.map((c) => (
                 <TouchableOpacity
@@ -85,13 +90,13 @@ export const CreateHabitModal = ({ visible, onClose, onSubmit }: Props) => {
                   style={[
                     styles.colorOption,
                     { backgroundColor: getColorValue(c) },
-                    cor === c && styles.selectedOption
+                    cor === c && [styles.selectedOption, { borderColor: colors.background }]
                   ]}
                 />
               ))}
             </ScrollView>
 
-            <Text style={styles.label}>Ícone</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Ícone</Text>
             <View style={styles.iconGrid}>
               {AVAILABLE_ICONS.map((i) => {
                 const Icon = getIconComponent(i);
@@ -104,7 +109,12 @@ export const CreateHabitModal = ({ visible, onClose, onSubmit }: Props) => {
                     onPress={() => setIcone(i)}
                     style={[
                       styles.iconOption,
-                      isSelected && { backgroundColor: activeColor, borderWidth: 2, borderColor: colors.surface } 
+                      { backgroundColor: colors.background },
+                      isSelected && { 
+                        backgroundColor: activeColor, 
+                        borderWidth: 2, 
+                        borderColor: colors.white 
+                      } 
                     ]}
                   >
                     <Icon 
@@ -116,8 +126,6 @@ export const CreateHabitModal = ({ visible, onClose, onSubmit }: Props) => {
               })}
             </View>
 
-            {/* BOTÃO AGORA DENTRO DO SCROLL: 
-                Garante que ele sempre apareça se você rolar até o fim. */}
             <MyButton 
               title="Criar Hábito" 
               onPress={handleSubmit} 
@@ -125,11 +133,10 @@ export const CreateHabitModal = ({ visible, onClose, onSubmit }: Props) => {
               style={{ 
                 backgroundColor: getColorValue(cor), 
                 marginTop: spacing.xl,
-                marginBottom: spacing.xl // Espaço extra abaixo do botão
+                marginBottom: spacing.xl
               }} 
             />
             
-            {/* Espaçador de segurança para iPhones com "notch" embaixo */}
             <SafeAreaView edges={['bottom']} />
           </ScrollView>
         </View>
@@ -148,12 +155,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: {
-    backgroundColor: colors.white, 
     borderTopLeftRadius: borderRadius.xl,
     borderTopRightRadius: borderRadius.xl,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
-    maxHeight: '90%', // Aumentado para dar mais espaço
+    maxHeight: '90%',
     width: '100%',
   },
   header: {
@@ -162,19 +168,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.md, 
   },
-  title: { fontSize: 20, fontWeight: 'bold', color: colors.text },
+  title: { fontSize: 20, fontWeight: 'bold' },
   closeButton: { 
     padding: spacing.sm, 
-    backgroundColor: colors.background, 
     borderRadius: borderRadius.md 
   },
   scrollContent: {
-    paddingBottom: spacing.xl * 2, // Garante que o usuário consiga rolar além do botão
+    paddingBottom: spacing.xl * 2,
   },
   label: { 
     fontSize: 14, 
     fontWeight: '600', 
-    color: colors.text, 
     marginTop: spacing.md, 
     marginBottom: spacing.sm 
   },
@@ -189,8 +193,7 @@ const styles = StyleSheet.create({
     marginRight: spacing.md, 
   },
   selectedOption: { 
-    borderWidth: 4, 
-    borderColor: colors.background, 
+    borderWidth: 4,
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -206,7 +209,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },

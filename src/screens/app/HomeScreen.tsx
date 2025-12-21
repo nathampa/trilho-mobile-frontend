@@ -1,23 +1,25 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { 
   View, Text, StyleSheet, TouchableOpacity, FlatList, 
-  StatusBar, RefreshControl, ActivityIndicator, Alert 
+  StatusBar, RefreshControl, Alert 
 } from 'react-native';
 import { LogOut, Plus, Check, Flame, Trophy } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context'; 
 import { useAuthStore } from '../../store/useAuthStore';
 import { useHabitStore, Habit } from '../../store/useHabitStore';
-import { colors, borderRadius, spacing } from '../../config/theme';
+import { getColors, borderRadius, spacing } from '../../config/theme';
 import { CreateHabitModal } from '../../components/CreateHabitModal';
 import { getIconComponent, getColorValue } from '../../utils/mappers';
-import { isSameDay } from 'date-fns';
 import { StatsHeader } from '../../components/StatsHeader'; 
 import { MotivationalCard } from '../../components/MotivationalCard';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export const HomeScreen = () => {
   const insets = useSafeAreaInsets();
   const { user, signOut } = useAuthStore();
-  const { habits, fetchData, toggleHabit, loading, stats } = useHabitStore();
+  const { habits, fetchData, toggleHabit, loading } = useHabitStore();
+  const { theme } = useTheme();
+  const colors = getColors(theme === 'dark');
   const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
@@ -43,24 +45,20 @@ export const HomeScreen = () => {
 
   const isCompletedToday = (dates: string[]): boolean => {
     if (!dates || dates.length === 0) return false;
-
     const formatToDay = (date: Date) => {
       const d = new Date(date);
       return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
     };
-
     const todayStr = formatToDay(new Date());
-    
     return dates.some(dateString => {
       const completionDateStr = formatToDay(new Date(dateString));
       return completionDateStr === todayStr;
     });
-};
+  };
   
   const completionProgress = useMemo(() => {
     const totalHabits = habits.length;
     if (totalHabits === 0) return 0;
-    
     const completedToday = habits.filter(h => isCompletedToday(h.datasDeConclusao)).length;
     return Math.round((completedToday / totalHabits) * 100);
   }, [habits]);
@@ -71,10 +69,15 @@ export const HomeScreen = () => {
     const completed = isCompletedToday(item.datasDeConclusao);
 
     return (
-      <View style={[styles.card, { borderLeftColor: color, borderLeftWidth: 4 }]}>
+      <View style={[styles.card, { 
+        borderLeftColor: color, 
+        borderLeftWidth: 4,
+        backgroundColor: colors.white 
+      }]}>
         <TouchableOpacity 
           style={[
             styles.checkBox, 
+            { borderColor: colors.border },
             completed && { backgroundColor: color, borderColor: color }
           ]}
           onPress={() => handleToggleHabit(item.id)}
@@ -85,7 +88,11 @@ export const HomeScreen = () => {
 
         <View style={styles.cardContent}>
           <View style={styles.cardHeader}>
-            <Text style={[styles.habitName, completed && styles.habitNameDone]}>
+            <Text style={[
+              styles.habitName, 
+              { color: colors.text },
+              completed && [styles.habitNameDone, { color: colors.textLight }]
+            ]}>
               {item.nome}
             </Text>
             <Icon size={20} color={color} />
@@ -94,11 +101,11 @@ export const HomeScreen = () => {
           <View style={styles.statsRow}>
             <View style={styles.statBadge}>
               <Flame size={12} color={item.sequenciaAtual > 0 ? "#F97316" : colors.textLight} />
-              <Text style={styles.statText}>{item.sequenciaAtual} dias</Text>
+              <Text style={[styles.statText, { color: colors.textLight }]}>{item.sequenciaAtual} dias</Text>
             </View>
             <View style={styles.statBadge}>
-              <Trophy size={12} color={colors.habit.yellow} />
-              <Text style={styles.statText}>Recorde: {item.maiorSequencia}</Text>
+              <Trophy size={12} color="#EAB308" />
+              <Text style={[styles.statText, { color: colors.textLight }]}>Recorde: {item.maiorSequencia}</Text>
             </View>
           </View>
         </View>
@@ -111,31 +118,39 @@ export const HomeScreen = () => {
       <StatsHeader />
       <View style={styles.motivationalSection}>
         <MotivationalCard progress={completionProgress} />
-        <Text style={styles.listTitle}>Seus Hábitos Ativos</Text>
+        <Text style={[styles.listTitle, { color: colors.text }]}>Seus Hábitos Ativos</Text>
       </View>
     </View>
   );
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar 
+        barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} 
+        backgroundColor={colors.background} 
+      />
       
-      <View style={[styles.topBar, { paddingTop: insets.top + spacing.md }]}> 
+      <View style={[styles.topBar, { 
+        paddingTop: insets.top + spacing.md,
+        backgroundColor: colors.background 
+      }]}> 
         <View>
-          <Text style={styles.greeting}>Olá, {user?.nome.split(' ')[0]}</Text>
-          <Text style={styles.subGreeting}>Dashboard</Text>
+          <Text style={[styles.greeting, { color: colors.text }]}>
+            Olá, {user?.nome.split(' ')[0]}
+          </Text>
+          <Text style={[styles.subGreeting, { color: colors.textLight }]}>Dashboard</Text>
         </View>
         <View style={styles.headerActions}>
           <TouchableOpacity 
             onPress={() => setModalVisible(true)} 
-            style={styles.iconBtn}
+            style={[styles.iconBtn, { backgroundColor: colors.white }]}
             hitSlop={10} 
           >
             <Plus size={24} color={colors.primary} />
           </TouchableOpacity>
           <TouchableOpacity 
             onPress={signOut} 
-            style={styles.iconBtn}
+            style={[styles.iconBtn, { backgroundColor: colors.white }]}
             hitSlop={10}
           >
             <LogOut size={24} color={colors.textLight} />
@@ -150,14 +165,14 @@ export const HomeScreen = () => {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={fetchData} />
+          <RefreshControl refreshing={loading} onRefresh={fetchData} tintColor={colors.primary} />
         }
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={
           !loading ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>Nenhum hábito ainda.</Text>
-              <Text style={styles.emptySubText}>Toque no + para começar!</Text>
+              <Text style={[styles.emptyText, { color: colors.textLight }]}>Nenhum hábito ainda.</Text>
+              <Text style={[styles.emptySubText, { color: colors.textLight }]}>Toque no + para começar!</Text>
             </View>
           ) : null
         }
@@ -173,37 +188,22 @@ export const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
+  container: { flex: 1 },
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md, 
-    backgroundColor: colors.background,
     zIndex: 10,
   },
-  headerActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  greeting: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.text,
-  },
-  subGreeting: {
-    fontSize: 14,
-    color: colors.textLight,
-  },
+  headerActions: { flexDirection: 'row', gap: 12 },
+  greeting: { fontSize: 24, fontWeight: 'bold' },
+  subGreeting: { fontSize: 14 },
   iconBtn: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -211,12 +211,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  listContent: {
-    paddingBottom: spacing.xl,
-  },
-  listHeaderContainer: {
-    marginBottom: spacing.sm,
-  },
+  listContent: { paddingBottom: spacing.xl },
+  listHeaderContainer: { marginBottom: spacing.sm },
   motivationalSection: {
     paddingHorizontal: spacing.lg,
     marginTop: spacing.sm,
@@ -224,12 +220,10 @@ const styles = StyleSheet.create({
   listTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: colors.text,
     marginBottom: spacing.md,
     marginTop: spacing.md,
   },
   card: {
-    backgroundColor: '#FFF',
     borderRadius: borderRadius.lg,
     padding: 16,
     marginBottom: 12,
@@ -247,7 +241,6 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: colors.border,
     marginRight: 16,
     justifyContent: 'center',
     alignItems: 'center',
@@ -259,12 +252,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 6,
   },
-  habitName: { fontSize: 16, fontWeight: 'bold', color: colors.text },
-  habitNameDone: { textDecorationLine: 'line-through', color: colors.textLight },
+  habitName: { fontSize: 16, fontWeight: 'bold' },
+  habitNameDone: { textDecorationLine: 'line-through' },
   statsRow: { flexDirection: 'row', gap: 12 },
   statBadge: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  statText: { fontSize: 12, fontWeight: '600', color: colors.textLight },
+  statText: { fontSize: 12, fontWeight: '600' },
   emptyState: { padding: 40, alignItems: 'center' },
-  emptyText: { fontSize: 16, fontWeight: 'bold', color: colors.textLight },
-  emptySubText: { fontSize: 14, color: colors.textLight, marginTop: 4 },
+  emptyText: { fontSize: 16, fontWeight: 'bold' },
+  emptySubText: { fontSize: 14, marginTop: 4 },
 });

@@ -1,15 +1,16 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, StatusBar, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, StatusBar, ScrollView, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, borderRadius } from '../../config/theme';
+import { getColors, spacing, borderRadius } from '../../config/theme';
 import { useHabitStore } from '../../store/useHabitStore';
 import { getIconComponent, getColorValue } from '../../utils/mappers';
-import { isSameDay, subDays, format } from 'date-fns';
-
-const screenWidth = Dimensions.get('window').width;
+import { isSameDay, subDays } from 'date-fns';
+import { useTheme } from '../../contexts/ThemeContext';
 
 // Componente para a barra de progresso individual
 const HabitProgressCard = ({ habit }: any) => {
+  const { theme } = useTheme();
+  const colors = getColors(theme === 'dark');
   const Icon = getIconComponent(habit.icone);
   const color = getColorValue(habit.cor);
   
@@ -29,27 +30,29 @@ const HabitProgressCard = ({ habit }: any) => {
   const percentage = Math.round((completedCount / 7) * 100);
 
   return (
-    <View style={styles.progressCard}>
+    <View style={[styles.progressCard, { backgroundColor: colors.white }]}>
       {/* Header do Card */}
       <View style={styles.progressHeader}>
         <View style={[styles.iconContainer, { backgroundColor: `${color}20` }]}>
           <Icon size={24} color={color} />
         </View>
         <View style={styles.progressInfo}>
-          <Text style={styles.progressName}>{habit.nome}</Text>
-          <Text style={styles.progressSub}>Concluído {completedCount} de 7 dias</Text>
+          <Text style={[styles.progressName, { color: colors.text }]}>{habit.nome}</Text>
+          <Text style={[styles.progressSub, { color: colors.textLight }]}>
+            Concluído {completedCount} de 7 dias
+          </Text>
         </View>
         <Text style={[styles.progressPercentage, { color }]}>{percentage}%</Text>
       </View>
 
       {/* Barra de Progresso */}
-      <View style={styles.progressBarBackground}>
+      <View style={[styles.progressBarBackground, { backgroundColor: colors.background }]}>
         <View style={[styles.progressBarFill, { width: `${percentage}%`, backgroundColor: color }]} />
       </View>
 
       {/* Mini Histórico Visual */}
       <View style={styles.historyContainer}>
-        <Text style={styles.historyLabel}>7 dias atrás</Text>
+        <Text style={[styles.historyLabel, { color: colors.textLight }]}>7 dias atrás</Text>
         <View style={styles.dayGrid}>
           {history.map((day, index) => (
             <View 
@@ -61,35 +64,46 @@ const HabitProgressCard = ({ habit }: any) => {
             />
           ))}
         </View>
-        <Text style={styles.historyLabel}>Hoje</Text>
+        <Text style={[styles.historyLabel, { color: colors.textLight }]}>Hoje</Text>
       </View>
     </View>
   );
 };
 
-
 export const ProgressScreen = () => {
   const insets = useSafeAreaInsets();
   const { habits, loading } = useHabitStore();
+  const { theme } = useTheme();
+  const colors = getColors(theme === 'dark');
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar 
+        barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} 
+        backgroundColor={colors.background} 
+      />
       
-      <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
-        <Text style={styles.title}>Progresso Detalhado</Text>
-        <Text style={styles.subtitle}>Desempenho individual dos seus hábitos.</Text>
+      <View style={[styles.header, { 
+        paddingTop: insets.top + spacing.md,
+        borderBottomColor: colors.border 
+      }]}>
+        <Text style={[styles.title, { color: colors.text }]}>Progresso Detalhado</Text>
+        <Text style={[styles.subtitle, { color: colors.textLight }]}>
+          Desempenho individual dos seus hábitos.
+        </Text>
       </View>
       
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {loading ? (
-            <ActivityIndicator color={colors.primary} size="large" style={{ marginTop: spacing.xl }} />
+          <ActivityIndicator color={colors.primary} size="large" style={{ marginTop: spacing.xl }} />
         ) : habits.length === 0 ? (
-            <View style={styles.emptyState}>
-                <Text style={styles.emptyText}>Crie seu primeiro hábito na aba Hábitos.</Text>
-            </View>
+          <View style={styles.emptyState}>
+            <Text style={[styles.emptyText, { color: colors.textLight }]}>
+              Crie seu primeiro hábito na aba Hábitos.
+            </Text>
+          </View>
         ) : (
-            habits.map(habit => <HabitProgressCard key={habit.id} habit={habit} />)
+          habits.map(habit => <HabitProgressCard key={habit.id} habit={habit} />)
         )}
       </ScrollView>
     </View>
@@ -97,16 +111,14 @@ export const ProgressScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1 },
   header: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md,
-    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
-  title: { fontSize: 24, fontWeight: 'bold', color: colors.text, marginBottom: 4 },
-  subtitle: { fontSize: 16, color: colors.textLight },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 4 },
+  subtitle: { fontSize: 16 },
   scrollContent: { 
     padding: spacing.lg, 
     gap: spacing.lg 
@@ -117,11 +129,8 @@ const styles = StyleSheet.create({
     alignItems: 'center', 
     padding: spacing.xl 
   },
-  emptyText: { color: colors.textLight },
-
-  // Estilos do Card de Progresso
+  emptyText: { fontSize: 14 },
   progressCard: {
-    backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     padding: spacing.md,
     shadowColor: '#000',
@@ -145,11 +154,9 @@ const styles = StyleSheet.create({
   progressName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: colors.text,
   },
   progressSub: {
     fontSize: 12,
-    color: colors.textLight,
   },
   progressPercentage: {
     fontSize: 24,
@@ -157,7 +164,6 @@ const styles = StyleSheet.create({
   },
   progressBarBackground: {
     height: 8,
-    backgroundColor: colors.background,
     borderRadius: 4,
     marginBottom: spacing.md,
   },
@@ -185,6 +191,5 @@ const styles = StyleSheet.create({
   },
   historyLabel: {
     fontSize: 10,
-    color: colors.textLight,
   },
 });

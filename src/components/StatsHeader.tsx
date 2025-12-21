@@ -2,11 +2,14 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Flame, Check, Trophy } from 'lucide-react-native';
 import { useHabitStore } from '../store/useHabitStore';
-import { colors, borderRadius, spacing } from '../config/theme';
+import { getColors, borderRadius, spacing } from '../config/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { isSameDay } from 'date-fns';
 
 export const StatsHeader = () => {
   const { stats, habits } = useHabitStore();
+  const { theme } = useTheme();
+  const colors = getColors(theme === 'dark');
   
   // Calcular Progresso do Dia (X/Y concluídos)
   const today = new Date();
@@ -65,10 +68,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#F97316',
   },
   progressCard: {
-    backgroundColor: colors.primary,
+    backgroundColor: '#10B981',
   },
   recordCard: {
-    backgroundColor: colors.habit.blue,
+    backgroundColor: '#3B82F6',
   },
   icon: {
     opacity: 0.8,
@@ -77,13 +80,13 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: colors.white,
+    color: '#FFFFFF',
     marginTop: spacing.sm / 2,
   },
   label: {
     fontSize: 10,
     fontWeight: '500',
-    color: colors.white,
+    color: '#FFFFFF',
     opacity: 0.9,
     textTransform: 'uppercase',
   },
