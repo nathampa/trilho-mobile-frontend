@@ -39,12 +39,10 @@ export const MotivationalCard = ({ progress }: Props) => {
   }
 
   const BgIcon = message.icon;
-  const bgColor = message.color + '15'; // Cor clara para o fundo
-  const iconBg = message.color;
 
   return (
-    <View style={[styles.card, { backgroundColor: bgColor, borderColor: message.color }]}>
-      <View style={[styles.iconContainer, { backgroundColor: iconBg }]}>
+    <View style={styles.card}>
+      <View style={[styles.iconContainer, { backgroundColor: message.color }]}>
         <BgIcon size={24} color="#FFF" />
       </View>
       <View style={styles.content}>
@@ -61,14 +59,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: borderRadius.xl,
     padding: spacing.md,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.habit.yellow,
     marginBottom: spacing.md,
-    // Sombra sutil para profundidade
+    backgroundColor: colors.white,
     shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 5,
-    elevation: 1,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
   iconContainer: {
     width: 48,
@@ -90,5 +87,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: colors.textLight,
+    lineHeight: 20,
   },
 });
