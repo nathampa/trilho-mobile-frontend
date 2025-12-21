@@ -27,13 +27,13 @@ export const HomeScreen = () => {
   }, []);
 
   const handleCreate = async (data: { nome: string; cor: string; icone: string }) => {
-    try {
-      await useHabitStore.getState().createHabit(data);
-      setModalVisible(false);
-    } catch (error: any) {
-      Alert.alert('Erro ao Criar Hábito', error.message || 'Verifique sua conexão.');
-    }
-  };
+  try {
+    await useHabitStore.getState().createHabit(data);
+    setModalVisible(false);
+  } catch (error: any) {
+    Alert.alert('Erro ao Criar Hábito', error.message || 'Verifique sua conexão.');
+  }
+};
 
   const handleToggleHabit = async (habitId: string) => {
     try {
@@ -142,9 +142,11 @@ export const HomeScreen = () => {
         </View>
         <View style={styles.headerActions}>
           <TouchableOpacity 
-            onPress={() => setModalVisible(true)} 
-            style={[styles.iconBtn, { backgroundColor: colors.white }]}
-            hitSlop={10} 
+            onPress={() => {
+                setModalVisible(true);
+              }} 
+              style={[styles.iconBtn, { backgroundColor: colors.white }]}
+              hitSlop={10} 
           >
             <Plus size={24} color={colors.primary} />
           </TouchableOpacity>

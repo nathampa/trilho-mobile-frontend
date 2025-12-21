@@ -122,7 +122,7 @@ export const SettingsScreen = () => {
         {/* Botão de Logout */}
         <TouchableOpacity 
           style={[styles.logoutButton, { backgroundColor: colors.white }]}
-          onPress={handleLogout}
+          onPress={signOut}
         >
           <LogOut size={20} color="#EF4444" />
           <Text style={styles.logoutText}>Sair da Conta</Text>

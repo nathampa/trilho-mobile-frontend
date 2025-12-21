@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { 
-  Modal, View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform 
+  Modal, 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  StyleSheet, 
+  ScrollView, 
+  Alert, 
+  KeyboardAvoidingView, 
+  Platform 
 } from 'react-native';
 import { X } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -47,100 +55,111 @@ export const CreateHabitModal = ({ visible, onClose, onSubmit }: Props) => {
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.overlay}
-      >
+    <Modal 
+      visible={visible} 
+      animationType="slide" 
+      transparent 
+      onRequestClose={onClose}
+      // Correção crucial para Android em modo Bridgeless/Fabric
+      statusBarTranslucent
+    >
+      <View style={styles.overlay}>
+        {/* Área para fechar ao clicar fora */}
         <TouchableOpacity 
           style={styles.dismissArea} 
           activeOpacity={1} 
           onPress={onClose} 
         />
 
-        <View style={[styles.container, { backgroundColor: colors.white }]}>
-          {/* Cabeçalho Fixo */}
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text }]}>Novo Hábito</Text>
-            <TouchableOpacity 
-              onPress={onClose} 
-              style={[styles.closeButton, { backgroundColor: colors.background }]}
-            >
-              <X color={colors.textLight} size={24} />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView 
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
-          >
-            <MyInput 
-              label="Nome do hábito"
-              placeholder="Ex: Ler 10 páginas"
-              value={nome}
-              onChangeText={setNome}
-            />
-
-            <Text style={[styles.label, { color: colors.text }]}>Cor do Tema</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow}>
-              {AVAILABLE_COLORS.map((c) => (
-                <TouchableOpacity
-                  key={c}
-                  onPress={() => setCor(c)}
-                  style={[
-                    styles.colorOption,
-                    { backgroundColor: getColorValue(c) },
-                    cor === c && [styles.selectedOption, { borderColor: colors.background }]
-                  ]}
-                />
-              ))}
-            </ScrollView>
-
-            <Text style={[styles.label, { color: colors.text }]}>Ícone</Text>
-            <View style={styles.iconGrid}>
-              {AVAILABLE_ICONS.map((i) => {
-                const Icon = getIconComponent(i);
-                const isSelected = icone === i;
-                const activeColor = getColorValue(cor);
-                
-                return (
-                  <TouchableOpacity
-                    key={i}
-                    onPress={() => setIcone(i)}
-                    style={[
-                      styles.iconOption,
-                      { backgroundColor: colors.background },
-                      isSelected && { 
-                        backgroundColor: activeColor, 
-                        borderWidth: 2, 
-                        borderColor: colors.white 
-                      } 
-                    ]}
-                  >
-                    <Icon 
-                      size={24} 
-                      color={isSelected ? '#FFF' : colors.textLight} 
-                    />
-                  </TouchableOpacity>
-                );
-              })}
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+        >
+          <View style={[styles.container, { backgroundColor: colors.white }]}>
+            {/* Cabeçalho */}
+            <View style={styles.header}>
+              <Text style={[styles.title, { color: colors.text }]}>Novo Hábito</Text>
+              <TouchableOpacity 
+                onPress={onClose} 
+                style={[styles.closeButton, { backgroundColor: colors.background }]}
+              >
+                <X color={colors.textLight} size={24} />
+              </TouchableOpacity>
             </View>
 
-            <MyButton 
-              title="Criar Hábito" 
-              onPress={handleSubmit} 
-              loading={loading}
-              style={{ 
-                backgroundColor: getColorValue(cor), 
-                marginTop: spacing.xl,
-                marginBottom: spacing.xl
-              }} 
-            />
-            
-            <SafeAreaView edges={['bottom']} />
-          </ScrollView>
-        </View>
-      </KeyboardAvoidingView>
+            <ScrollView 
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled"
+            >
+              <MyInput 
+                label="Nome do hábito"
+                placeholder="Ex: Ler 10 páginas"
+                value={nome}
+                onChangeText={setNome}
+              />
+
+              <Text style={[styles.label, { color: colors.text }]}>Cor do Tema</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow}>
+                {AVAILABLE_COLORS.map((c) => (
+                  <TouchableOpacity
+                    key={c}
+                    onPress={() => setCor(c)}
+                    style={[
+                      styles.colorOption,
+                      { backgroundColor: getColorValue(c) },
+                      cor === c && [styles.selectedOption, { borderColor: colors.background }]
+                    ]}
+                  />
+                ))}
+              </ScrollView>
+
+              <Text style={[styles.label, { color: colors.text }]}>Ícone</Text>
+              <View style={styles.iconGrid}>
+                {AVAILABLE_ICONS.map((i) => {
+                  const Icon = getIconComponent(i);
+                  const isSelected = icone === i;
+                  const activeColor = getColorValue(cor);
+                  
+                  return (
+                    <TouchableOpacity
+                      key={i}
+                      onPress={() => setIcone(i)}
+                      style={[
+                        styles.iconOption,
+                        { backgroundColor: colors.background },
+                        isSelected && { 
+                          backgroundColor: activeColor, 
+                          borderWidth: 2, 
+                          borderColor: colors.white 
+                        } 
+                      ]}
+                    >
+                      <Icon 
+                        size={24} 
+                        color={isSelected ? '#FFF' : colors.textLight} 
+                      />
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <MyButton 
+                title="Criar Hábito" 
+                onPress={handleSubmit} 
+                loading={loading}
+                style={{ 
+                  backgroundColor: getColorValue(cor), 
+                  marginTop: spacing.xl,
+                  marginBottom: spacing.xl
+                }} 
+              />
+              
+              <SafeAreaView edges={['bottom']} />
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 };
@@ -148,11 +167,14 @@ export const CreateHabitModal = ({ visible, onClose, onSubmit }: Props) => {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.6)', // Fundo escurecido mais visível
     justifyContent: 'flex-end',
   },
   dismissArea: {
     flex: 1,
+  },
+  keyboardView: {
+    width: '100%',
   },
   container: {
     borderTopLeftRadius: borderRadius.xl,
@@ -161,6 +183,12 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
     maxHeight: '90%',
     width: '100%',
+    // Sombras para destaque visual
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
   },
   header: {
     flexDirection: 'row',
