@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { 
-  Modal, View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert 
+  Modal, View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform 
 } from 'react-native';
 import { X } from 'lucide-react-native';
-// IMPORTAÇÃO CORRIGIDA: Inclui spacing
+import { SafeAreaView } from 'react-native-safe-area-context'; // Importação importante
 import { colors, borderRadius, spacing } from '../config/theme'; 
 import { getIconComponent, getColorValue } from '../utils/mappers';
 import { MyInput } from './MyInput';
@@ -44,8 +44,19 @@ export const CreateHabitModal = ({ visible, onClose, onSubmit }: Props) => {
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.overlay}
+      >
+        {/* Área para fechar ao clicar fora (opcional) */}
+        <TouchableOpacity 
+          style={styles.dismissArea} 
+          activeOpacity={1} 
+          onPress={onClose} 
+        />
+
         <View style={styles.container}>
+          {/* Cabeçalho Fixo */}
           <View style={styles.header}>
             <Text style={styles.title}>Novo Hábito</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -53,8 +64,11 @@ export const CreateHabitModal = ({ visible, onClose, onSubmit }: Props) => {
             </TouchableOpacity>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {/* Campo Nome */}
+          <ScrollView 
+            showsVerticalScrollIndicator={false}
+            // O segredo está no paddingBottom alto aqui para o botão respirar
+            contentContainerStyle={styles.scrollContent}
+          >
             <MyInput 
               label="Nome do hábito"
               placeholder="Ex: Ler 10 páginas"
@@ -62,9 +76,8 @@ export const CreateHabitModal = ({ visible, onClose, onSubmit }: Props) => {
               onChangeText={setNome}
             />
 
-            {/* Seletor de Cor */}
             <Text style={styles.label}>Cor do Tema</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow} contentContainerStyle={{ paddingVertical: 4 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scrollRow}>
               {AVAILABLE_COLORS.map((c) => (
                 <TouchableOpacity
                   key={c}
@@ -78,7 +91,6 @@ export const CreateHabitModal = ({ visible, onClose, onSubmit }: Props) => {
               ))}
             </ScrollView>
 
-            {/* Seletor de Ícone */}
             <Text style={styles.label}>Ícone</Text>
             <View style={styles.iconGrid}>
               {AVAILABLE_ICONS.map((i) => {
@@ -103,17 +115,25 @@ export const CreateHabitModal = ({ visible, onClose, onSubmit }: Props) => {
                 );
               })}
             </View>
-          </ScrollView>
 
-          {/* Botão de Criação */}
-          <MyButton 
-            title="Criar Hábito" 
-            onPress={handleSubmit} 
-            loading={loading}
-            style={{ backgroundColor: getColorValue(cor), marginTop: spacing.lg }} // Usando spacing.lg
-          />
+            {/* BOTÃO AGORA DENTRO DO SCROLL: 
+                Garante que ele sempre apareça se você rolar até o fim. */}
+            <MyButton 
+              title="Criar Hábito" 
+              onPress={handleSubmit} 
+              loading={loading}
+              style={{ 
+                backgroundColor: getColorValue(cor), 
+                marginTop: spacing.xl,
+                marginBottom: spacing.xl // Espaço extra abaixo do botão
+              }} 
+            />
+            
+            {/* Espaçador de segurança para iPhones com "notch" embaixo */}
+            <SafeAreaView edges={['bottom']} />
+          </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
@@ -124,53 +144,63 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
+  dismissArea: {
+    flex: 1,
+  },
   container: {
-    backgroundColor: colors.white, // Usando white ou surface
+    backgroundColor: colors.white, 
     borderTopLeftRadius: borderRadius.xl,
     borderTopRightRadius: borderRadius.xl,
-    padding: spacing.lg, // Usando spacing.lg
-    maxHeight: '85%',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    maxHeight: '90%', // Aumentado para dar mais espaço
+    width: '100%',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md, // Usando spacing.md
+    marginBottom: spacing.md, 
   },
   title: { fontSize: 20, fontWeight: 'bold', color: colors.text },
-  closeButton: { padding: spacing.sm, backgroundColor: colors.background, borderRadius: borderRadius.md }, // Usando spacing.sm
-
+  closeButton: { 
+    padding: spacing.sm, 
+    backgroundColor: colors.background, 
+    borderRadius: borderRadius.md 
+  },
+  scrollContent: {
+    paddingBottom: spacing.xl * 2, // Garante que o usuário consiga rolar além do botão
+  },
   label: { 
     fontSize: 14, 
     fontWeight: '600', 
     color: colors.text, 
-    marginTop: spacing.md, // Usando spacing.md
-    marginBottom: spacing.sm // Usando spacing.sm
+    marginTop: spacing.md, 
+    marginBottom: spacing.sm 
   },
-  
-  // Seletor de Cores
-  scrollRow: { marginBottom: spacing.sm, flexDirection: 'row' },
+  scrollRow: { 
+    marginBottom: spacing.sm, 
+    flexDirection: 'row' 
+  },
   colorOption: { 
     width: 48, 
     height: 48, 
     borderRadius: 24, 
-    marginRight: spacing.md, // Usando spacing.md
+    marginRight: spacing.md, 
   },
   selectedOption: { 
     borderWidth: 4, 
     borderColor: colors.background, 
-    shadowColor: colors.text,
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
     elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
-  
-  // Grid de Ícones
   iconGrid: { 
     flexDirection: 'row', 
     flexWrap: 'wrap', 
-    gap: spacing.sm, // Usando spacing.sm
-    marginBottom: spacing.md // Usando spacing.md
+    gap: spacing.sm, 
   },
   iconOption: {
     width: 56,
