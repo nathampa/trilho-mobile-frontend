@@ -42,12 +42,20 @@ export const HomeScreen = () => {
   };
 
   const isCompletedToday = (dates: string[]): boolean => {
-    const today = new Date();
+    if (!dates || dates.length === 0) return false;
+
+    const formatToDay = (date: Date) => {
+      const d = new Date(date);
+      return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+    };
+
+    const todayStr = formatToDay(new Date());
+    
     return dates.some(dateString => {
-      const completionDate = new Date(dateString);
-      return isSameDay(completionDate, today);
+      const completionDateStr = formatToDay(new Date(dateString));
+      return completionDateStr === todayStr;
     });
-  };
+};
   
   const completionProgress = useMemo(() => {
     const totalHabits = habits.length;

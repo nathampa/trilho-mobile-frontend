@@ -62,18 +62,25 @@ export const useHabitStore = create<HabitState>((set, get) => ({
     }
   },
 
-  toggleHabit: async (id) => {
-    try {
-      await api.post(`/habitos/${id}/complete`);
-      await get().fetchData(); 
-    } catch (error: any) {
-      if (error.response && error.response.status === 400) {
-        // Hábito já concluído - apenas atualiza os dados
-        await get().fetchData();
-      } else {
-        console.error('Erro ao completar hábito:', error);
-        throw error;
-      }
+toggleHabit: async (id) => {
+  try {
+    const response = await api.post(`/habitos/${id}/complete`);
+    const { habito } = response.data; // O backend já retorna o hábito atualizado
+
+    set((state) => ({
+      habits: state.habits.map((h) => (h.id === id ? habito : h)),
+    }));
+    
+    // Atualiza as estatísticas globais também
+    await get().fetchData(); 
+  } catch (error: any) {
+    if (error.response && error.response.status === 400) {
+      await get().fetchData();
+    } else {
+      console.error('Erro ao completar hábito:', error);
+      throw error;
     }
-  },
+  }
+},
+
 }));
