@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, FlatList, 
   StatusBar, RefreshControl, Alert 
 } from 'react-native';
-import { LogOut, Plus, Check, Flame, Trophy } from 'lucide-react-native';
+import { LogOut, Plus, Check, Flame, Trophy, Pencil } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context'; 
 import { useAuthStore } from '../../store/useAuthStore';
 import { useHabitStore, Habit } from '../../store/useHabitStore';
@@ -17,23 +17,29 @@ import { useTheme } from '../../contexts/ThemeContext';
 export const HomeScreen = () => {
   const insets = useSafeAreaInsets();
   const { user, signOut } = useAuthStore();
-  const { habits, fetchData, toggleHabit, loading } = useHabitStore();
+  const { habits, fetchData, toggleHabit, loading, createHabit, updateHabit } = useHabitStore();
   const { theme } = useTheme();
   const colors = getColors(theme === 'dark');
   const [modalVisible, setModalVisible] = useState(false);
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
 
   useEffect(() => {
     fetchData(); 
   }, []);
 
-  const handleCreate = async (data: { nome: string; cor: string; icone: string }) => {
-  try {
-    await useHabitStore.getState().createHabit(data);
-    setModalVisible(false);
-  } catch (error: any) {
-    Alert.alert('Erro ao Criar Hábito', error.message || 'Verifique sua conexão.');
-  }
-};
+  const handleSubmitHabit = async (data: { nome: string; cor: string; icone: string }) => {
+    try {
+      if (editingHabit) {
+        await updateHabit(editingHabit.id, data);
+        setEditingHabit(null);
+      } else {
+        await createHabit(data);
+      }
+      setModalVisible(false);
+    } catch (error: any) {
+      Alert.alert('Erro ao Salvar Habito', error.message || 'Verifique sua conexao.');
+    }
+  };
 
   const handleToggleHabit = async (habitId: string) => {
     try {
@@ -95,7 +101,19 @@ export const HomeScreen = () => {
             ]}>
               {item.nome}
             </Text>
-            <Icon size={20} color={color} />
+            <View style={styles.cardActions}>
+              <Icon size={20} color={color} />
+              <TouchableOpacity
+                onPress={() => {
+                  setEditingHabit(item);
+                  setModalVisible(true);
+                }}
+                style={[styles.editButton, { backgroundColor: colors.background }]}
+                hitSlop={10}
+              >
+                <Pencil size={16} color={colors.textLight} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.statsRow}>
@@ -143,6 +161,7 @@ export const HomeScreen = () => {
         <View style={styles.headerActions}>
           <TouchableOpacity 
             onPress={() => {
+                setEditingHabit(null);
                 setModalVisible(true);
               }} 
               style={[styles.iconBtn, { backgroundColor: colors.white }]}
@@ -182,8 +201,17 @@ export const HomeScreen = () => {
 
       <CreateHabitModal 
         visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSubmit={handleCreate}
+        onClose={() => {
+          setModalVisible(false);
+          setEditingHabit(null);
+        }}
+        onSubmit={handleSubmitHabit}
+        initialData={
+          editingHabit
+            ? { nome: editingHabit.nome, cor: editingHabit.cor, icone: editingHabit.icone }
+            : undefined
+        }
+        submitLabel={editingHabit ? 'Salvar Alteracoes' : 'Criar Habito'}
       />
     </View>
   );
@@ -254,6 +282,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 6,
   },
+  cardActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  editButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   habitName: { fontSize: 16, fontWeight: 'bold' },
   habitNameDone: { textDecorationLine: 'line-through' },
   statsRow: { flexDirection: 'row', gap: 12 },
@@ -263,3 +299,4 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: 16, fontWeight: 'bold' },
   emptySubText: { fontSize: 14, marginTop: 4 },
 });
+

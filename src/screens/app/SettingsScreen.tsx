@@ -1,16 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, StatusBar, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Sun, Moon, Smartphone, LogOut, User, Info } from 'lucide-react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuthStore } from '../../store/useAuthStore';
 import { getColors, spacing, borderRadius } from '../../config/theme';
+import { MyInput } from '../../components/MyInput';
+import { MyButton } from '../../components/MyButton';
 
 export const SettingsScreen = () => {
   const insets = useSafeAreaInsets();
   const { theme, themeMode, setThemeMode } = useTheme();
-  const { user, signOut } = useAuthStore();
+  const { user, signOut, updateProfile } = useAuthStore();
   const colors = getColors(theme === 'dark');
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileName, setProfileName] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const handleLogout = () => {
     Alert.alert(
@@ -25,6 +31,38 @@ export const SettingsScreen = () => {
         },
       ]
     );
+  };
+
+  const startEditingProfile = () => {
+    setProfileName(user?.nome ?? '');
+    setProfileEmail(user?.email ?? '');
+    setIsEditingProfile(true);
+  };
+
+  const handleSaveProfile = async () => {
+    const data: { nome?: string; email?: string } = {};
+    if (profileName.trim() && profileName.trim() !== user?.nome) {
+      data.nome = profileName.trim();
+    }
+    if (profileEmail.trim() && profileEmail.trim() !== user?.email) {
+      data.email = profileEmail.trim();
+    }
+
+    if (!data.nome && !data.email) {
+      Alert.alert('Nada para salvar', 'Atualize nome ou email antes de salvar.');
+      return;
+    }
+
+    setIsSavingProfile(true);
+    try {
+      await updateProfile(data);
+      Alert.alert('Perfil atualizado', 'Seus dados foram atualizados.');
+      setIsEditingProfile(false);
+    } catch (error: any) {
+      Alert.alert('Erro ao atualizar', error.message || 'Tente novamente.');
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   const themeOptions = [
@@ -66,6 +104,43 @@ export const SettingsScreen = () => {
               </View>
             </View>
           </View>
+
+          {isEditingProfile ? (
+            <View style={styles.profileEditArea}>
+              <MyInput
+                label="Nome"
+                value={profileName}
+                onChangeText={setProfileName}
+                autoCapitalize="words"
+              />
+              <MyInput
+                label="Email"
+                value={profileEmail}
+                onChangeText={setProfileEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+              <MyButton
+                title="Salvar Perfil"
+                onPress={handleSaveProfile}
+                loading={isSavingProfile}
+                style={{ marginTop: spacing.md }}
+              />
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setIsEditingProfile(false)}
+              >
+                <Text style={[styles.cancelText, { color: colors.textLight }]}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <MyButton
+              title="Editar Perfil"
+              onPress={startEditingProfile}
+              variant="secondary"
+              style={{ marginTop: spacing.md }}
+            />
+          )}
         </View>
 
         {/* Seção de Tema */}
@@ -180,6 +255,9 @@ const styles = StyleSheet.create({
   profileInfo: {
     flex: 1,
   },
+  profileEditArea: {
+    marginTop: spacing.md,
+  },
   profileName: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -244,6 +322,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
+  },
+  cancelButton: {
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  cancelText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   logoutText: {
     fontSize: 16,

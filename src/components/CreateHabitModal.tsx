@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Modal, 
   View, 
@@ -22,12 +22,20 @@ interface Props {
   visible: boolean;
   onClose: () => void;
   onSubmit: (data: { nome: string; cor: string; icone: string }) => Promise<void>;
+  initialData?: { nome: string; cor: string; icone: string };
+  submitLabel?: string;
 }
 
 const AVAILABLE_COLORS = ['BLUE', 'GREEN', 'RED', 'YELLOW', 'PURPLE', 'PINK'];
 const AVAILABLE_ICONS = ['BOOK', 'WEIGHTS', 'MEDITATION', 'WATER', 'CODE', 'RUNNING', 'MOON', 'SAVE', 'CAR', 'BIKE'];
 
-export const CreateHabitModal = ({ visible, onClose, onSubmit }: Props) => {
+export const CreateHabitModal = ({
+  visible,
+  onClose,
+  onSubmit,
+  initialData,
+  submitLabel = 'Criar Habito',
+}: Props) => {
   const { theme } = useTheme();
   const colors = getColors(theme === 'dark');
   
@@ -35,6 +43,14 @@ export const CreateHabitModal = ({ visible, onClose, onSubmit }: Props) => {
   const [cor, setCor] = useState('BLUE');
   const [icone, setIcone] = useState('BOOK');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (visible) {
+      setNome(initialData?.nome ?? '');
+      setCor(initialData?.cor ?? 'BLUE');
+      setIcone(initialData?.icone ?? 'BOOK');
+    }
+  }, [visible, initialData?.nome, initialData?.cor, initialData?.icone]);
 
   const handleSubmit = async () => {
     if (!nome.trim()) {
@@ -45,7 +61,6 @@ export const CreateHabitModal = ({ visible, onClose, onSubmit }: Props) => {
     setLoading(true);
     try {
       await onSubmit({ nome, cor, icone });
-      setNome('');
       onClose();
     } catch (err: any) {
       Alert.alert('Ops!', err.message || 'Erro ao salvar hábito.');
@@ -145,7 +160,7 @@ export const CreateHabitModal = ({ visible, onClose, onSubmit }: Props) => {
               </View>
 
               <MyButton 
-                title="Criar Hábito" 
+                title={submitLabel} 
                 onPress={handleSubmit} 
                 loading={loading}
                 style={{ 
@@ -241,3 +256,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
+
+

@@ -25,6 +25,7 @@ interface HabitState {
   fetchData: () => Promise<void>;
   createHabit: (data: { nome: string; cor: string; icone: string }) => Promise<void>;
   toggleHabit: (id: string) => Promise<void>;
+  updateHabit: (id: string, data: { nome?: string; cor?: string; icone?: string }) => Promise<Habit>;
 }
 
 export const useHabitStore = create<HabitState>((set, get) => ({
@@ -80,6 +81,21 @@ toggleHabit: async (id) => {
       console.error('Erro ao completar hábito:', error);
       throw error;
     }
+  }
+},
+
+updateHabit: async (id, data) => {
+  try {
+    const response = await api.put(`/habitos/${id}`, data);
+    const { habito } = response.data;
+    set((state) => ({
+      habits: state.habits.map((h) => (h.id === id ? habito : h)),
+    }));
+    await get().fetchData();
+    return habito as Habit;
+  } catch (error) {
+    console.error('Erro ao editar habito:', error);
+    throw error;
   }
 },
 
