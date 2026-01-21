@@ -26,6 +26,7 @@ interface HabitState {
   createHabit: (data: { nome: string; cor: string; icone: string }) => Promise<void>;
   toggleHabit: (id: string) => Promise<void>;
   updateHabit: (id: string, data: { nome?: string; cor?: string; icone?: string }) => Promise<Habit>;
+  reorderHabits: (orderedHabits: Habit[]) => Promise<void>;
 }
 
 export const useHabitStore = create<HabitState>((set, get) => ({
@@ -95,6 +96,20 @@ updateHabit: async (id, data) => {
     return habito as Habit;
   } catch (error) {
     console.error('Erro ao editar habito:', error);
+    throw error;
+  }
+},
+
+reorderHabits: async (orderedHabits) => {
+  set({ habits: orderedHabits });
+  try {
+    await api.patch('/habitos/reordenar', {
+      ordemHabitos: orderedHabits.map((h) => h.id),
+    });
+    await get().fetchData();
+  } catch (error) {
+    console.error('Erro ao reordenar habitos:', error);
+    await get().fetchData();
     throw error;
   }
 },

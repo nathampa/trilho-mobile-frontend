@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, FlatList, 
   StatusBar, RefreshControl, Alert 
 } from 'react-native';
-import { LogOut, Plus, Check, Flame, Trophy, Pencil } from 'lucide-react-native';
+import { LogOut, Plus, Check, Flame, Trophy, Pencil, ArrowUp, ArrowDown, Save, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context'; 
 import { useAuthStore } from '../../store/useAuthStore';
 import { useHabitStore, Habit } from '../../store/useHabitStore';
@@ -17,11 +17,13 @@ import { useTheme } from '../../contexts/ThemeContext';
 export const HomeScreen = () => {
   const insets = useSafeAreaInsets();
   const { user, signOut } = useAuthStore();
-  const { habits, fetchData, toggleHabit, loading, createHabit, updateHabit } = useHabitStore();
+  const { habits, fetchData, toggleHabit, loading, createHabit, updateHabit, reorderHabits } = useHabitStore();
   const { theme } = useTheme();
   const colors = getColors(theme === 'dark');
   const [modalVisible, setModalVisible] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  const [isReordering, setIsReordering] = useState(false);
+  const [reorderDraft, setReorderDraft] = useState<Habit[] | null>(null);
 
   useEffect(() => {
     fetchData(); 
@@ -39,6 +41,36 @@ export const HomeScreen = () => {
     } catch (error: any) {
       Alert.alert('Erro ao Salvar Habito', error.message || 'Verifique sua conexao.');
     }
+  };
+
+  const startReorder = () => {
+    setReorderDraft([...habits]);
+    setIsReordering(true);
+  };
+
+  const cancelReorder = () => {
+    setIsReordering(false);
+    setReorderDraft(null);
+  };
+
+  const saveReorder = async () => {
+    if (!reorderDraft) return;
+    try {
+      await reorderHabits(reorderDraft);
+      setIsReordering(false);
+      setReorderDraft(null);
+    } catch (error: any) {
+      Alert.alert('Erro ao Reordenar', error.message || 'Tente novamente.');
+    }
+  };
+
+  const moveHabit = (index: number, direction: number) => {
+    if (!reorderDraft) return;
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= reorderDraft.length) return;
+    const updated = [...reorderDraft];
+    [updated[index], updated[targetIndex]] = [updated[targetIndex], updated[index]];
+    setReorderDraft(updated);
   };
 
   const handleToggleHabit = async (habitId: string) => {
@@ -69,7 +101,7 @@ export const HomeScreen = () => {
     return Math.round((completedToday / totalHabits) * 100);
   }, [habits]);
 
-  const renderHabit = ({ item }: { item: Habit }) => {
+  const renderHabit = ({ item, index }: { item: Habit; index: number }) => {
     const Icon = getIconComponent(item.icone);
     const color = getColorValue(item.cor);
     const completed = isCompletedToday(item.datasDeConclusao);
@@ -87,32 +119,54 @@ export const HomeScreen = () => {
             completed && { backgroundColor: color, borderColor: color }
           ]}
           onPress={() => handleToggleHabit(item.id)}
-          disabled={completed}
+          disabled={completed || isReordering}
         >
           {completed && <Check size={16} color="#FFF" strokeWidth={3} />}
         </TouchableOpacity>
 
         <View style={styles.cardContent}>
           <View style={styles.cardHeader}>
-            <Text style={[
+            <Text
+              numberOfLines={2}
+              style={[
               styles.habitName, 
               { color: colors.text },
               completed && [styles.habitNameDone, { color: colors.textLight }]
-            ]}>
+            ]}
+            >
               {item.nome}
             </Text>
             <View style={styles.cardActions}>
               <Icon size={20} color={color} />
-              <TouchableOpacity
-                onPress={() => {
-                  setEditingHabit(item);
-                  setModalVisible(true);
-                }}
-                style={[styles.editButton, { backgroundColor: colors.background }]}
-                hitSlop={10}
-              >
-                <Pencil size={16} color={colors.textLight} />
-              </TouchableOpacity>
+              {isReordering ? (
+                <View style={styles.reorderControls}>
+                  <TouchableOpacity
+                    onPress={() => moveHabit(index, -1)}
+                    style={[styles.reorderButton, { backgroundColor: colors.background }]}
+                    hitSlop={10}
+                  >
+                    <ArrowUp size={14} color={colors.textLight} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => moveHabit(index, 1)}
+                    style={[styles.reorderButton, { backgroundColor: colors.background }]}
+                    hitSlop={10}
+                  >
+                    <ArrowDown size={14} color={colors.textLight} />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => {
+                    setEditingHabit(item);
+                    setModalVisible(true);
+                  }}
+                  style={[styles.editButton, { backgroundColor: colors.background }]}
+                  hitSlop={10}
+                >
+                  <Pencil size={16} color={colors.textLight} />
+                </TouchableOpacity>
+              )}
             </View>
           </View>
 
@@ -159,13 +213,40 @@ export const HomeScreen = () => {
           <Text style={[styles.subGreeting, { color: colors.textLight }]}>Dashboard</Text>
         </View>
         <View style={styles.headerActions}>
+          {isReordering ? (
+            <>
+              <TouchableOpacity 
+                onPress={saveReorder} 
+                style={[styles.iconBtn, { backgroundColor: colors.white }]}
+                hitSlop={10}
+              >
+                <Save size={20} color={colors.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={cancelReorder} 
+                style={[styles.iconBtn, { backgroundColor: colors.white }]}
+                hitSlop={10}
+              >
+                <X size={20} color={colors.textLight} />
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity 
+              onPress={startReorder} 
+              style={[styles.iconBtn, { backgroundColor: colors.white }]}
+              hitSlop={10}
+            >
+              <ArrowUp size={20} color={colors.textLight} />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity 
             onPress={() => {
                 setEditingHabit(null);
                 setModalVisible(true);
               }} 
               style={[styles.iconBtn, { backgroundColor: colors.white }]}
-              hitSlop={10} 
+              hitSlop={10}
+              disabled={isReordering}
           >
             <Plus size={24} color={colors.primary} />
           </TouchableOpacity>
@@ -180,7 +261,7 @@ export const HomeScreen = () => {
       </View>
 
       <FlatList
-        data={habits}
+        data={isReordering ? reorderDraft ?? habits : habits}
         keyExtractor={item => item.id}
         renderItem={renderHabit}
         contentContainerStyle={styles.listContent}
@@ -275,14 +356,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  cardContent: { flex: 1 },
+  cardContent: { flex: 1, minWidth: 0 },
   cardHeader: {
+    flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 6,
+    gap: 8,
   },
-  cardActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  cardActions: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0, alignSelf: 'flex-start' },
   editButton: {
     width: 28,
     height: 28,
@@ -290,7 +373,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  habitName: { fontSize: 16, fontWeight: 'bold' },
+  reorderControls: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  reorderButton: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  habitName: { fontSize: 16, fontWeight: 'bold', flex: 1, marginRight: 8 },
   habitNameDone: { textDecorationLine: 'line-through' },
   statsRow: { flexDirection: 'row', gap: 12 },
   statBadge: { flexDirection: 'row', alignItems: 'center', gap: 4 },

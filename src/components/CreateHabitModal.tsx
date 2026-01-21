@@ -27,7 +27,22 @@ interface Props {
 }
 
 const AVAILABLE_COLORS = ['BLUE', 'GREEN', 'RED', 'YELLOW', 'PURPLE', 'PINK'];
-const AVAILABLE_ICONS = ['BOOK', 'WEIGHTS', 'MEDITATION', 'WATER', 'CODE', 'RUNNING', 'MOON', 'SAVE', 'CAR', 'BIKE'];
+const AVAILABLE_ICONS = [
+  'BOOK',
+  'WEIGHTS',
+  'MEDITATION',
+  'WATER',
+  'CODE',
+  'RUNNING',
+  'MOON',
+  'SAVE',
+  'CAR',
+  'BIKE',
+  'HANGER',
+  'CUTLERY',
+  'FONT',
+  'PENCIL',
+];
 
 export const CreateHabitModal = ({
   visible,
