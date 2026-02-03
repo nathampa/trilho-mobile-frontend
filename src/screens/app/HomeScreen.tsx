@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, FlatList, 
   StatusBar, RefreshControl, Alert 
 } from 'react-native';
-import { LogOut, Plus, Check, Flame, Trophy, Pencil, ArrowUp, ArrowDown, Save, X } from 'lucide-react-native';
+import { LogOut, Plus, Check, Flame, Trophy, Pencil, ArrowUp, ArrowDown, Save, X, Trash2 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context'; 
 import { useAuthStore } from '../../store/useAuthStore';
 import { useHabitStore, Habit } from '../../store/useHabitStore';
@@ -17,7 +17,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 export const HomeScreen = () => {
   const insets = useSafeAreaInsets();
   const { user, signOut } = useAuthStore();
-  const { habits, fetchData, toggleHabit, loading, createHabit, updateHabit, reorderHabits } = useHabitStore();
+  const { habits, fetchData, toggleHabit, loading, createHabit, updateHabit, deleteHabit, reorderHabits } = useHabitStore();
   const { theme } = useTheme();
   const colors = getColors(theme === 'dark');
   const [modalVisible, setModalVisible] = useState(false);
@@ -79,6 +79,29 @@ export const HomeScreen = () => {
     } catch (error: any) {
       console.error('Erro ao alternar hábito:', error);
     }
+  };
+
+  const handleDeleteHabit = (habit: Habit) => {
+    if (isReordering) return;
+
+    Alert.alert(
+      'Remover hábito',
+      `Tem certeza que deseja remover "${habit.nome}"?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Remover',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteHabit(habit.id);
+            } catch (error: any) {
+              Alert.alert('Erro ao remover hábito', error.message || 'Tente novamente.');
+            }
+          },
+        },
+      ],
+    );
   };
 
   const isCompletedToday = (dates: string[]): boolean => {
@@ -156,16 +179,25 @@ export const HomeScreen = () => {
                   </TouchableOpacity>
                 </View>
               ) : (
-                <TouchableOpacity
-                  onPress={() => {
-                    setEditingHabit(item);
-                    setModalVisible(true);
-                  }}
-                  style={[styles.editButton, { backgroundColor: colors.background }]}
-                  hitSlop={10}
-                >
-                  <Pencil size={16} color={colors.textLight} />
-                </TouchableOpacity>
+                <>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setEditingHabit(item);
+                      setModalVisible(true);
+                    }}
+                    style={[styles.editButton, { backgroundColor: colors.background }]}
+                    hitSlop={10}
+                  >
+                    <Pencil size={16} color={colors.textLight} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => handleDeleteHabit(item)}
+                    style={[styles.editButton, styles.deleteButton, { backgroundColor: colors.background }]}
+                    hitSlop={10}
+                  >
+                    <Trash2 size={14} color={colors.textLight} />
+                  </TouchableOpacity>
+                </>
               )}
             </View>
           </View>
@@ -373,6 +405,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  deleteButton: { opacity: 0.7 },
   reorderControls: {
     flexDirection: 'row',
     gap: 6,

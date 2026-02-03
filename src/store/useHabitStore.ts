@@ -26,6 +26,7 @@ interface HabitState {
   createHabit: (data: { nome: string; cor: string; icone: string }) => Promise<void>;
   toggleHabit: (id: string) => Promise<void>;
   updateHabit: (id: string, data: { nome?: string; cor?: string; icone?: string }) => Promise<Habit>;
+  deleteHabit: (id: string) => Promise<void>;
   reorderHabits: (orderedHabits: Habit[]) => Promise<void>;
 }
 
@@ -96,6 +97,16 @@ updateHabit: async (id, data) => {
     return habito as Habit;
   } catch (error) {
     console.error('Erro ao editar habito:', error);
+    throw error;
+  }
+},
+
+deleteHabit: async (id) => {
+  try {
+    await api.delete(`/habitos/${id}`);
+    await get().fetchData();
+  } catch (error) {
+    console.error('Erro ao remover habito:', error);
     throw error;
   }
 },
